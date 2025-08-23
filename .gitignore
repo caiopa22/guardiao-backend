@@ -1,0 +1,12 @@
+# Ignorar arquivos e pastas do ambiente Python
+__pycache__/
+*.pyc
+venv/
+.venv/
+.env
+
+# Ignorar arquivos gerados pelo Docker
+.dockerignore
+!docker-compose.yml
+!Dockerfile
+!requirements.txt
