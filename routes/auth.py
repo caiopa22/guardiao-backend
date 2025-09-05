@@ -18,7 +18,10 @@ async def login(data: LoginModel) -> str:
     if not verify_password(data.password, user["password"]):
         return JSONResponse(content={"message": "Senha está incorreta"}, status_code=406)
     
-    user["_id"] = str(user["_id"])  # convert ObjectId to string
+    user["_id"] = str(user["_id"])
+    if "secrets" in user:
+        for secret in user["secrets"]:
+            secret["_id"] = str(secret["_id"])
     user.pop("password")
 
     data = {
