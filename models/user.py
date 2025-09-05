@@ -1,5 +1,6 @@
 from pydantic import BaseModel, Field
 from typing import Optional
+from typing import List, Tuple
 
 class User(BaseModel):
     name: str
@@ -7,7 +8,13 @@ class User(BaseModel):
     password: str
     img: str
     role: str
-    secrets: list[str]
+    secrets: List[Tuple[str, str]] = []
+
+class RegisterUser(BaseModel):
+    name: str
+    email: str
+    password: str
+    role: Optional[str] = "user"
     
 class UpdateUser(BaseModel):
     name: Optional[str] = None

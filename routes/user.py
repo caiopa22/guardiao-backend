@@ -1,11 +1,11 @@
 from fastapi import APIRouter, HTTPException, Header
 from fastapi.responses import JSONResponse
-from models.user import User, UpdateUser
-from models.auth import LoginModel
+from models.user import UpdateUser, RegisterUser
 from schemas.schema import list_users
 from config.database import users_collection
 from bson import ObjectId
 from services.auth_service import hash_password, verify_password, get_payload_from_header
+from services.auth_service import verify_password, create_access_token, decode_access_token
 
 user_router = APIRouter(prefix='/user')
 
@@ -16,11 +16,12 @@ async def get_users() -> list:
 
 
 @user_router.post("/")
-async def create_user(user: User) -> dict:
+async def create_user(user: RegisterUser) -> dict:
+    print(user)
     user.password = hash_password(user.password)
     try:
         users_collection.insert_one(dict(user))
-        return dict(user)
+        return create_access_token(payload={"_id": str(user["_id"]), "email": user["email"]})
     except:
         return JSONResponse({"message": "Usuário já cadastrado"}, status_code=400)
 
