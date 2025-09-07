@@ -14,6 +14,7 @@ class RegisterUser(BaseModel):
     name: str
     email: str
     password: str
+    img: Optional[str] = ""
     role: Optional[str] = "user"
     
 class UpdateUser(BaseModel):

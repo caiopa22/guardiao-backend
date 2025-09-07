@@ -1,5 +1,6 @@
 from fastapi import APIRouter, HTTPException, Header
 from fastapi.responses import JSONResponse
+from services.user_service import convert_objectid
 from models.user import UpdateUser, RegisterUser
 from schemas.schema import list_users
 from config.database import users_collection
@@ -17,13 +18,16 @@ async def get_users() -> list:
 
 @user_router.post("/")
 async def create_user(user: RegisterUser) -> dict:
-    print(user)
     user.password = hash_password(user.password)
+    user.img = ""
+    print("User recebido:", user)
     try:
-        users_collection.insert_one(dict(user))
-        return create_access_token(payload={"_id": str(user["_id"]), "email": user["email"]})
-    except:
-        return JSONResponse({"message": "Usuário já cadastrado"}, status_code=400)
+        result = users_collection.insert_one(dict(user))
+        return {"token": create_access_token(payload={"_id": str(result.inserted_id), "email": user.email})}
+
+    except Exception as e:
+        print("Erro ocorrido:", e)  # mostra no console qual é o erro real
+        return JSONResponse({"message": f"Erro ao cadastrar: {e}"}, status_code=400)
 
 @user_router.put("/{_id}")
 async def alter_user(_id: str, update: UpdateUser, authorization: str = Header(...)) -> dict:
@@ -40,8 +44,7 @@ async def alter_user(_id: str, update: UpdateUser, authorization: str = Header(.
     
     users_collection.find_one_and_update({"_id": ObjectId(_id)}, {"$set": dict(update_data)})
     user = users_collection.find_one({"_id": ObjectId(_id)})
-    if user:
-        user["_id"] = str(user["_id"])
+    user = convert_objectid(user)
     
     return JSONResponse(status_code=200, content=user)
 

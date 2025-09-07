@@ -21,7 +21,6 @@ async def create_secret(data: Secret, authorization: str = Header(...)) -> str:
     user = users_collection.find_one({"_id": ObjectId(token["_id"])})
 
     if user:
-        # Cria o segredo como um dict, não como lista/tupla
         secret = {
             "_id": ObjectId(),
             "title": data.title,
@@ -78,9 +77,7 @@ async def alter_secret(_id: str, authorization: str = Header(...)) -> str:
 @secret_router.get("/")
 async def list_user_secrets(authorization: str = Header(...)):
     token = get_payload_from_header(authorization=authorization)
-    print(token)
     user: User = users_collection.find_one(filter={"_id": ObjectId(token["_id"])})
-    print(user)
 
     if not user:
         raise HTTPException(status_code=404, detail="User not found")

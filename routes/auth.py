@@ -38,5 +38,12 @@ async def refresh_token(token: str) -> str:
     user: User = users_collection.find_one({"_id": ObjectId(userId)}) 
     if not user:
         raise HTTPException(status_code=400, detail="Usuário do token não encontrado")
-    return JSONResponse(status_code=200, content=create_access_token(payload={"_id": user["_id"], "email": user["email"]}))
+    user.pop("password")
+    user["_id"] = str(user["_id"])
+    secrets = user.get("secrets", [])
+    if secrets:
+        for secret in secrets:
+            secret["_id"] = str(secret["_id"])
+    token = create_access_token(payload={"_id": user["_id"], "email": user["email"]})
+    return JSONResponse(status_code=200, content={"user": user, "token": token})
  
