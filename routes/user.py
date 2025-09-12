@@ -10,17 +10,30 @@ from services.auth_service import verify_password, create_access_token, decode_a
 
 user_router = APIRouter(prefix='/user')
 
-@user_router.get("/")
+# Para listar todos os usuários, apenas a role "admin" pode fazer
+@user_router.get("/findAll")
 async def get_users() -> list:
     users = list_users(users_collection.find())
     return users
 
+@user_router.get("/")
+async def get_user(authorization: str = Header(...)) -> dict:
+    token = get_payload_from_header(authorization=authorization)
+    user = users_collection.find_one({"_id": ObjectId(token["_id"])})
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    user["_id"] = str(user["_id"])
+    user.pop("password")
+    secrets = user.get("secrets", [])
+    if secrets:
+        for secret in secrets:
+            secret["_id"] = str(secret["_id"])
+    return user
 
 @user_router.post("/")
 async def create_user(user: RegisterUser) -> dict:
     user.password = hash_password(user.password)
-    user.img = ""
-    print("User recebido:", user)
     try:
         result = users_collection.insert_one(dict(user))
         return {"token": create_access_token(payload={"_id": str(result.inserted_id), "email": user.email})}

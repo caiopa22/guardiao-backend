@@ -9,3 +9,6 @@ class LoginModel(BaseModel):
 class TokenPayload(BaseModel):
     _id: str
     email: str
+
+class FaceRequest(BaseModel):
+    unknownB64: str

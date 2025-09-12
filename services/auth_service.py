@@ -4,6 +4,14 @@ import jwt
 from datetime import datetime, timedelta
 import os
 from dotenv import load_dotenv
+from fastapi import FastAPI
+from pydantic import BaseModel
+from deepface import DeepFace
+import base64
+import numpy as np
+from io import BytesIO
+from PIL import Image
+import cv2
 
 load_dotenv()
 SECRET=os.getenv("SECRET")
@@ -43,3 +51,19 @@ def get_payload_from_header(authorization: str = Header(...)) -> dict:
     token = authorization.split(" ")[1]
     decoded = decode_access_token(token=token)
     return decoded
+
+def verify_faces(unknownB64: str, knownB64: str) -> bool:
+    def base64_to_numpy(b64_str: str) -> np.ndarray:
+        img_data = base64.b64decode(b64_str.split(",")[1])
+        img = Image.open(BytesIO(img_data)).convert("RGB")
+        img_np = np.array(img)
+        # Converter RGB -> BGR porque o DeepFace usa OpenCV
+        return cv2.cvtColor(img_np, cv2.COLOR_RGB2BGR)
+    
+    unknownImg = base64_to_numpy(unknownB64)
+    knownImg = base64_to_numpy(knownB64)
+
+    result = DeepFace.verify(unknownImg, knownImg, enforce_detection=False)
+    print(result)
+    
+    return result["verified"]

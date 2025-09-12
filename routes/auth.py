@@ -1,8 +1,8 @@
-from fastapi import APIRouter, HTTPException
-from models.auth import LoginModel, TokenPayload
+from fastapi import APIRouter, HTTPException, Header, Body
+from models.auth import LoginModel, TokenPayload, FaceRequest
 from models.user import User
 from config.database import users_collection
-from services.auth_service import verify_password, create_access_token, decode_access_token
+from services.auth_service import verify_password, create_access_token, decode_access_token, get_payload_from_header, verify_faces
 from fastapi.responses import JSONResponse
 from bson import ObjectId
 
@@ -47,3 +47,17 @@ async def refresh_token(token: str) -> str:
     token = create_access_token(payload={"_id": user["_id"], "email": user["email"]})
     return JSONResponse(status_code=200, content={"user": user, "token": token})
  
+@auth_router.post("/verify")
+async def face_match(
+    data: FaceRequest,
+    authorization: str = Header(...)
+) -> bool:
+    token = get_payload_from_header(authorization=authorization)
+    user = users_collection.find_one({"_id": ObjectId(token["_id"])})
+
+    if not user:
+        raise HTTPException(status_code=400, detail="Usuário do token não encontrado")
+    
+    isTheSamePerson = verify_faces(knownB64=user["img"], unknownB64=data.unknownB64)
+    print(isTheSamePerson)
+    return isTheSamePerson
