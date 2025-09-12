@@ -59,5 +59,4 @@ async def face_match(
         raise HTTPException(status_code=400, detail="Usuário do token não encontrado")
     
     isTheSamePerson = verify_faces(knownB64=user["img"], unknownB64=data.unknownB64)
-    print(isTheSamePerson)
     return isTheSamePerson

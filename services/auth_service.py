@@ -64,6 +64,5 @@ def verify_faces(unknownB64: str, knownB64: str) -> bool:
     knownImg = base64_to_numpy(knownB64)
 
     result = DeepFace.verify(unknownImg, knownImg, enforce_detection=False)
-    print(result)
     
     return result["verified"]

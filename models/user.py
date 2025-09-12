@@ -24,3 +24,10 @@ class UpdateUser(BaseModel):
     img: Optional[str] = None
     role: Optional[str] = None
     secrets: Optional[list[str]] = None
+
+class DashboardUser(BaseModel):
+    name: str
+    email: str
+    img: str
+    role: str
+    count_secrets: int = 0

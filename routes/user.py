@@ -1,20 +1,27 @@
 from fastapi import APIRouter, HTTPException, Header
 from fastapi.responses import JSONResponse
-from services.user_service import convert_objectid
-from models.user import UpdateUser, RegisterUser
+from services.user_service import convert_objectid, make_dashboard_user
+from models.user import UpdateUser, RegisterUser, User
 from schemas.schema import list_users
 from config.database import users_collection
 from bson import ObjectId
-from services.auth_service import hash_password, verify_password, get_payload_from_header
-from services.auth_service import verify_password, create_access_token, decode_access_token
+from services.auth_service import hash_password, create_access_token, get_payload_from_header
+from typing import List
 
 user_router = APIRouter(prefix='/user')
 
 # Para listar todos os usuários, apenas a role "admin" pode fazer
 @user_router.get("/findAll")
-async def get_users() -> list:
+async def get_users(authorization: str = Header(...)) -> list:
+    token = get_payload_from_header(authorization=authorization)
+    user = users_collection.find_one({"_id": ObjectId(token["_id"])})
+    if (not user or user["role"] != "admin"):
+        raise HTTPException(status_code=401, detail="Ação não permitida")
+
     users = list_users(users_collection.find())
-    return users
+    data = [make_dashboard_user(u) for u in users]
+
+    return data
 
 @user_router.get("/")
 async def get_user(authorization: str = Header(...)) -> dict:
@@ -39,7 +46,6 @@ async def create_user(user: RegisterUser) -> dict:
         return {"token": create_access_token(payload={"_id": str(result.inserted_id), "email": user.email})}
 
     except Exception as e:
-        print("Erro ocorrido:", e)  # mostra no console qual é o erro real
         return JSONResponse({"message": f"Erro ao cadastrar: {e}"}, status_code=400)
 
 @user_router.put("/{_id}")
