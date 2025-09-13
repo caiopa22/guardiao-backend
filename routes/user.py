@@ -15,12 +15,11 @@ user_router = APIRouter(prefix='/user')
 async def get_users(authorization: str = Header(...)) -> list:
     token = get_payload_from_header(authorization=authorization)
     user = users_collection.find_one({"_id": ObjectId(token["_id"])})
-    if (not user or user["role"] != "admin"):
+    if (not user or (user["role"] != "admin" and user["role"] != "owner")):
         raise HTTPException(status_code=401, detail="Ação não permitida")
 
     users = list_users(users_collection.find())
     data = [make_dashboard_user(u) for u in users]
-
     return data
 
 @user_router.get("/")

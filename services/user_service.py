@@ -16,5 +16,5 @@ def make_dashboard_user(user: dict) -> DashboardUser:
         email=user.get("email", ""),
         img=user.get("img", ""),
         role=user.get("role", "user"),
-        count_secrets=len(user.get("secrets", []))  # just count whatever is in the DB
+        count_secrets=len(user.get("secrets", []))
     )
